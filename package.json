@@ -1,0 +1,24 @@
+{
+  "name": "yushin-saas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Yushin TCM-intaketool — multi-tenant SaaS-versie (Render Node + Postgres + Mollie). Cloudflare Worker/D1-scripts hieronder blijven staan als terugvaloptie, zie migrations/ vs migrations-postgres/.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:postgres": "node scripts/migrate-postgres.mjs",
+    "db:migrate:local": "wrangler d1 execute yushin-db --local --file=./migrations/0001_init.sql && wrangler d1 execute yushin-db --local --file=./migrations/0002_password_reset.sql && wrangler d1 execute yushin-db --local --file=./migrations/0003_user_deactivation.sql && wrangler d1 execute yushin-db --local --file=./migrations/0004_access_codes.sql && wrangler d1 execute yushin-db --local --file=./migrations/0005_audit_log.sql && wrangler d1 execute yushin-db --local --file=./migrations/0006_patient_intake_tokens.sql && wrangler d1 execute yushin-db --local --file=./migrations/0007_trial_session_limit.sql && wrangler d1 execute yushin-db --local --file=./migrations/0008_session_feedback.sql",
+    "db:migrate:remote": "wrangler d1 execute yushin-db --remote --file=./migrations/0001_init.sql && wrangler d1 execute yushin-db --remote --file=./migrations/0002_password_reset.sql && wrangler d1 execute yushin-db --remote --file=./migrations/0003_user_deactivation.sql && wrangler d1 execute yushin-db --remote --file=./migrations/0004_access_codes.sql && wrangler d1 execute yushin-db --remote --file=./migrations/0005_audit_log.sql && wrangler d1 execute yushin-db --remote --file=./migrations/0006_patient_intake_tokens.sql && wrangler d1 execute yushin-db --remote --file=./migrations/0007_trial_session_limit.sql && wrangler d1 execute yushin-db --remote --file=./migrations/0008_session_feedback.sql",
+    "test": "node --test tests/**/*.test.js",
+    "test:client": "node client/smoke-test.mjs && node client/integration-test.mjs && node client/dashboard-smoke-test.mjs",
+    "test:all": "npm test && npm run test:client"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

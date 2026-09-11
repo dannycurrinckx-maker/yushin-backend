@@ -1,0 +1,50 @@
+name = "yushin-saas"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# --- D1-database ---
+# Aanmaken met: npx wrangler d1 create yushin-db
+# Vul hieronder de database_id in die je daar terugkrijgt.
+[[d1_databases]]
+binding = "DB"
+database_name = "yushin-db"
+database_id = "e5c37de0-6f5c-45b8-af18-6c29ddd4451f"
+
+# --- Geheimen (NIET hier invullen, wel via CLI zetten) ---
+# npx wrangler secret put MOLLIE_API_KEY
+# npx wrangler secret put SESSION_SECRET
+# npx wrangler secret put RESEND_API_KEY
+#
+# MOLLIE_API_KEY   -> je Mollie API-key (test of live)
+# SESSION_SECRET   -> willekeurige lange string, gebruikt om sessietokens te ondertekenen
+# RESEND_API_KEY   -> je Resend API-key (taak #118, registratie-meldingsmail)
+
+[vars]
+APP_ENV = "production"
+# APP_BASE_URL: het live clientdomein (GitHub Pages). billing.js gebruikt dit
+# om te weigeren dat de Mollie-checkout-redirect naar een ander domein wijst
+# dan het onze. Pas dit aan zodra er een eigen/custom domein bijkomt
+# (taak #72) — dan verandert dit in bv. https://app.yushin.example.
+APP_BASE_URL = "https://dannycurrinckx-maker.github.io/yushin-client"
+
+# Taak #118 — registratie-meldingsmail (Resend). NOTIFY_EMAIL is het
+# e-mailadres dat een bericht krijgt bij elke nieuwe registratie. danyuzen.com
+# is geverifieerd bij Resend, dus NOTIFY_FROM_EMAIL verstuurt vanaf dat eigen
+# domein — daardoor kan er naar elk NOTIFY_EMAIL-adres verstuurd worden
+# (geen sandbox-beperking meer van "onboarding@resend.dev").
+NOTIFY_EMAIL = "info@danyuzen.com"
+NOTIFY_FROM_EMAIL = "Yushin <noreply@danyuzen.com>"
+
+# Taak #141b — platform-brede beheerbevoegdheid (bv. toegangscodes aanmaken
+# via /api/platform-admin/access-codes), LOS van elke organisatie-eigenaarsrol
+# (zie requirePlatformAdmin in src/index.js). Kommagescheiden lijst,
+# hoofdletterongevoelig vergeleken.
+#
+# BELANGRIJK — controleer dit adres vóór het deployen: dit moet het
+# e-mailadres zijn waarmee JIJ als gebruiker bent INGELOGD in de Yushin-app
+# zelf (je praktijkeigenaar-account), niet noodzakelijk hetzelfde adres als
+# hierboven (NOTIFY_EMAIL) of je Claude/Cowork-account. Nu op dezelfde waarde
+# als NOTIFY_EMAIL gezet als vertrekpunt — pas aan indien dat niet je
+# Yushin-inlogadres is, anders krijg je zelf een 403 op de nieuwe
+# adminpagina.
+PLATFORM_ADMIN_EMAILS = "info@danyuzen.com"

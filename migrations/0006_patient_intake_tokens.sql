@@ -1,0 +1,24 @@
+-- Wachtkamer-QR-intake (taak #134) — een patiënt scant een QR-code bij de
+-- therapeut/praktijk en vult de vragenlijst zelf in op het eigen toestel,
+-- zonder een account of in te loggen. Zie src/routes/patientIntake.js voor
+-- de volledige toelichting bij het beveiligingsmodel (rol wordt server-side
+-- altijd geforceerd naar "patient", organizationId/therapistId komen enkel
+-- uit dit token, nooit uit de request).
+--
+-- Eén token per THERAPEUT-account (niet per organisatie): bij een
+-- team-praktijk krijgt elke therapeut zijn eigen QR-code/link, consistent
+-- met hoe patient_sessions ook al altijd zowel aan organization_id ALS
+-- therapist_id gekoppeld is (zie 0001_init.sql). Bewust geen aparte tabel
+-- met geschiedenis/vervaldatum: een therapeut heeft op elk moment ten
+-- hoogste één actieve, deelbare link. Opnieuw genereren overschrijft de
+-- vorige token stilzwijgend — dat IS het intrekkingsmechanisme als een
+-- geprinte QR-code kwijtraakt of gelekt is (zie handleCreatePatientIntakeToken).
+--
+-- UNIQUE (niet enkel een gewone index): een botsing tussen twee toevallig
+-- identieke tokens zou een patiënt-intake aan de VERKEERDE praktijk koppelen
+-- — dat moet de database zelf al onmogelijk maken, niet enkel het feit dat
+-- newId() (crypto.randomUUID()) botsingen in de praktijk nooit zou moeten
+-- opleveren. NULL-waarden (de meeste gebruikers hebben nog geen token
+-- aangemaakt) tellen in SQLite niet mee als botsing binnen een UNIQUE index.
+ALTER TABLE users ADD COLUMN patient_intake_token TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_patient_intake_token ON users(patient_intake_token);
