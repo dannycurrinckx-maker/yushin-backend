@@ -1,4 +1,3 @@
-```javascript
 // Render (Node) entrypoint — vervangt de Cloudflare Worker-runtime, NIET de
 // applicatielogica zelf: src/index.js exporteert nog steeds gewoon
 // `{ fetch(request, env, ctx) }` volgens de standaard Fetch API
@@ -110,4 +109,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Yushin SaaS backend luistert op poort ${PORT} (APP_ENV=${process.env.APP_ENV || "production"})`);
 });
-```
