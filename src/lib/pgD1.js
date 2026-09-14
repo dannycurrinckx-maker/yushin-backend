@@ -22,7 +22,18 @@ import pg from "pg";
 pg.types.setTypeParser(20, (value) => parseInt(value, 10));
 
 function toPgSql(sql) {
-  return sql.replace(/datetime\('now'\)/g, "NOW()");
+  // Stap 1: datetime('now') (SQLite) -> NOW() (Postgres).
+  // Stap 2: expires_at is in het schema een TEXT-kolom (ISO 8601-strings,
+  // geschreven via sessionExpiryIso()/toISOString() in auth.js) — géén
+  // native timestamp-kolom. "expires_at > NOW()" faalt daardoor in Postgres
+  // met "operator does not exist: text > timestamp with time zone" (anders
+  // dan in SQLite, waar TEXT-vergelijking met een datetime-string prima
+  // werkt). Enkel dit specifieke, letterlijke patroon (twee bekende queries
+  // in db.js: getAuthSession en getValidPasswordResetToken) krijgt een
+  // expliciete cast — geen algemene kolomvertaler, zie toelichting bovenaan.
+  return sql
+    .replace(/datetime\('now'\)/g, "NOW()")
+    .replace(/expires_at > NOW\(\)/g, "expires_at::timestamptz > NOW()");
 }
 
 // Vertaalt positionele "?"-placeholders (D1/SQLite-stijl) naar Postgres' eigen
