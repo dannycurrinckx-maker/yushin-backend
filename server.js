@@ -1,7 +1,7 @@
 // Render (Node) entrypoint — vervangt de Cloudflare Worker-runtime, NIET de
 // applicatielogica zelf: src/index.js exporteert nog steeds gewoon
-// `{ fetch(request, env, ctx) }` volgens de standaard Fetch API
-// (Request/Response/Headers/URL), en dat bestand blijft ongewijzigd. Dit
+// een object met een fetch(request, env, ctx)-functie, volgens de standaard
+// Fetch API (Request/Response/Headers/URL), en dat bestand blijft ongewijzigd. Dit
 // bestand doet enkel het "verpakken": een Node http.Server ontvangt de echte
 // TCP-request, zet die om naar een Fetch Request, roept worker.fetch() aan
 // (exact zoals Cloudflare dat zelf ook doet), en stuurt de teruggegeven
@@ -60,7 +60,7 @@ function readBody(req) {
 }
 
 function toFetchRequest(req, body) {
-  const url = `http://${req.headers.host || "localhost"}${req.url}`;
+  const url = "http://" + (req.headers.host || "localhost") + req.url;
   const headers = new Headers();
   for (const [key, value] of Object.entries(req.headers)) {
     if (value === undefined) continue;
@@ -107,5 +107,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Yushin SaaS backend luistert op poort ${PORT} (APP_ENV=${process.env.APP_ENV || "production"})`);
+  console.log("Yushin SaaS backend luistert op poort " + PORT + " (APP_ENV=" + (process.env.APP_ENV || "production") + ")");
 });
