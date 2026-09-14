@@ -1,3 +1,4 @@
+```javascript
 // D1-vormige adapter rond een 'pg' Pool (Render Postgres), zodat src/lib/db.js
 // en alle routes — die allemaal enkel via db.prepare(sql).bind(...).run()/
 // .first()/.all() werken, nooit rechtstreeks met D1- of Postgres-specifieke
@@ -61,14 +62,21 @@ class PgStatement {
   }
 }
 
-// connectionString: de DATABASE_URL van de Render Postgres-instantie.
-// Render-interne connecties lopen al over een privénetwerk zonder SSL-eis;
-// externe connectiestrings (bv. lokaal testen) vereisen wel SSL — vandaar
-// ssl hieronder conditioneel enkel wanneer nodig, nooit hardcoded uit.
+// connectionString: de DATABASE_URL van de Postgres-instantie (Neon, sinds de
+// migratie weg van Cloudflare D1 — zie migrations-postgres/). Neon vereist
+// altijd SSL/TLS, ongeacht of de connectie van Render naar Neon loopt (dus
+// NOOIT "intern" zonder SSL, in tegenstelling tot een vroegere aanname hier
+// toen nog Render Postgres overwogen werd). Enkel bij een letterlijk lokale
+// connectie (localhost/127.0.0.1, bv. tijdens ontwikkeling met een lokale
+// Postgres) is SSL uit — voor alles daarbuiten (incl. neon.tech) staat SSL
+// altijd aan. rejectUnauthorized: false omdat Neon/Render een gedeeld
+// CA-certificaat gebruiken dat Node's ingebouwde CA-lijst niet altijd
+// herkent (zelfde patroon als de meeste managed-Postgres-aanbieders).
 export function createPgD1(connectionString) {
+  const isLocal = /^(postgres(?:ql)?:\/\/)?[^@]*@?(localhost|127\.0\.0\.1)/.test(connectionString);
   const pool = new pg.Pool({
     connectionString,
-    ssl: connectionString.includes("render.com") ? { rejectUnauthorized: false } : false,
+    ssl: isLocal ? false : { rejectUnauthorized: false },
   });
 
   return {
@@ -86,3 +94,4 @@ export function createPgD1(connectionString) {
     },
   };
 }
+```
