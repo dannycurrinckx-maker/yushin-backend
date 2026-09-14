@@ -1,4 +1,3 @@
-```javascript
 // D1-vormige adapter rond een 'pg' Pool (Render Postgres), zodat src/lib/db.js
 // en alle routes — die allemaal enkel via db.prepare(sql).bind(...).run()/
 // .first()/.all() werken, nooit rechtstreeks met D1- of Postgres-specifieke
@@ -31,7 +30,7 @@ function toPgSql(sql) {
 // letterlijk "?"-teken in een stringwaarde of commentaar.
 function toPgParams(sql) {
   let i = 0;
-  return sql.replace(/\?/g, () => `$${++i}`);
+  return sql.replace(/\?/g, () => "$" + ++i);
 }
 
 class PgStatement {
@@ -94,4 +93,3 @@ export function createPgD1(connectionString) {
     },
   };
 }
-```
