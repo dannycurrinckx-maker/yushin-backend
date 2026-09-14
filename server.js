@@ -1,3 +1,4 @@
+```javascript
 // Render (Node) entrypoint — vervangt de Cloudflare Worker-runtime, NIET de
 // applicatielogica zelf: src/index.js exporteert nog steeds gewoon
 // `{ fetch(request, env, ctx) }` volgens de standaard Fetch API
@@ -89,8 +90,19 @@ const server = http.createServer(async (req, res) => {
     const response = await worker.fetch(request, buildEnv(), {});
     await sendFetchResponse(res, response);
   } catch (err) {
+    // BELANGRIJK: ook hier CORS-headers zetten. Zonder deze headers blokkeert
+    // de browser dit 500-antwoord stilzwijgend (zelfde probleem als bij een
+    // gewone respons, zie de CORS-toelichting in src/index.js) — de client
+    // ziet dan een misleidende generieke "kan de server niet bereiken"/
+    // "Failed to fetch"-melding in plaats van de echte foutmelding hieronder,
+    // wat live problemen (bv. een tijdelijk databankprobleem) onnodig lastig
+    // te diagnosticeren maakt.
+    console.error("Onverwachte fout tijdens request-afhandeling:", err);
     res.statusCode = 500;
     res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.end(JSON.stringify({ error: "Interne serverfout.", detail: String((err && err.message) || err) }));
   }
 });
@@ -98,3 +110,4 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Yushin SaaS backend luistert op poort ${PORT} (APP_ENV=${process.env.APP_ENV || "production"})`);
 });
+```
