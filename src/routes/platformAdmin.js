@@ -14,7 +14,14 @@
 
 import { jsonResponse, readJsonBody } from "../lib/http.js";
 import { isNonEmptyString } from "../lib/validation.js";
-import { newId, createAccessCode, listAccessCodes, accessCodeExists } from "../lib/db.js";
+import {
+  newId,
+  createAccessCode,
+  listAccessCodes,
+  accessCodeExists,
+  getAccessCodeById,
+  deactivateAccessCode,
+} from "../lib/db.js";
 
 const VALID_KINDS = ["free", "discount"];
 
@@ -100,4 +107,18 @@ export async function handleListAccessCodes(request, env, ctx) {
       createdAt: r.created_at,
     })),
   });
+}
+
+// Taak #142 — code intrekken (active=0), NIET hard verwijderen: de rij blijft
+// bestaan zodat use_count/note/wanneer-aangemaakt zichtbaar blijft in de
+// lijst (audit trail), maar getAccessCodeByCode (accessCodes.js) filtert al
+// op active=1 dus de code werkt vanaf nu nergens meer bij het redeemen.
+// Idempotent: nogmaals intrekken van een al-inactieve code is geen fout.
+export async function handleDeactivateAccessCode(request, env, ctx, params) {
+  const existing = await getAccessCodeById(env.DB, params.id);
+  if (!existing) {
+    return jsonResponse({ error: "Toegangscode niet gevonden." }, 404);
+  }
+  await deactivateAccessCode(env.DB, params.id);
+  return jsonResponse({ ok: true, id: params.id });
 }

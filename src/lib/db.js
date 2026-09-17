@@ -393,6 +393,18 @@ export async function incrementAccessCodeUseCount(db, accessCodeId) {
     .run();
 }
 
+// Taak #142 — code intrekken zonder de rij te verwijderen (audit trail met
+// use_count/note blijft bewaard). Zet enkel active=0: getAccessCodeByCode
+// filtert al op "active = 1", dus een ingetrokken code werkt vanaf nu nergens
+// meer bij /api/access-code/redeem, ook al staat hij nog in de lijst.
+export async function getAccessCodeById(db, accessCodeId) {
+  return db.prepare("SELECT * FROM access_codes WHERE id = ?").bind(accessCodeId).first();
+}
+
+export async function deactivateAccessCode(db, accessCodeId) {
+  await db.prepare("UPDATE access_codes SET active = 0 WHERE id = ?").bind(accessCodeId).run();
+}
+
 // Een 'free'-code ontgrendelt de organisatie DIRECT (subscription_status ->
 // 'active'), zonder dat er ooit via Mollie betaald wordt — vandaar het aparte
 // "free"-plan in plans.js (manualOnly, €0) als label.

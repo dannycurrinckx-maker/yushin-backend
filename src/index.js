@@ -23,7 +23,7 @@ import { handleGetOrganization } from "./routes/organization.js";
 import { handleRedeemAccessCode } from "./routes/accessCodes.js";
 import { handleListSessions, handleGetSessionDetail, handleSubmitSessionFeedback } from "./routes/sessions.js";
 import { handleListAuditLog } from "./routes/auditLog.js";
-import { handleCreateAccessCode, handleListAccessCodes } from "./routes/platformAdmin.js";
+import { handleCreateAccessCode, handleListAccessCodes, handleDeactivateAccessCode } from "./routes/platformAdmin.js";
 import {
   handleGetPatientIntakeToken,
   handleCreatePatientIntakeToken,
@@ -165,6 +165,15 @@ const ROUTES = [
   // src/routes/platformAdmin.js.
   { method: "POST", path: "/api/platform-admin/access-codes", handler: handleCreateAccessCode, auth: "platformAdmin" },
   { method: "GET", path: "/api/platform-admin/access-codes", handler: handleListAccessCodes, auth: "platformAdmin" },
+  // Taak #142 — code intrekken (active=0). Regex net als /api/sessions/:id
+  // hierboven, om dezelfde reden: enige route met een pad-parameter.
+  {
+    method: "DELETE",
+    path: /^\/api\/platform-admin\/access-codes\/([^/]+)$/,
+    paramNames: ["id"],
+    handler: handleDeactivateAccessCode,
+    auth: "platformAdmin",
+  },
 
   // --- Wachtkamer-QR-intake (taak #134) ---
   // Token-beheer: "required" (niet "owner") — elke therapeut beheert zijn
